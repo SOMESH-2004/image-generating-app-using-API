@@ -16,33 +16,30 @@ async function generateImage() {
     }
     
     // Show loading state
-    screen.innerHTML = '<p>Generating image...</p>';
+    screen.innerHTML = '<p>Generating image... This may take 10-30 seconds</p>';
     generateBtn.disabled = true;
     
     try {
-        const response = await fetch('http://localhost:5000/generate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ prompt: prompt })
-        });
+        // Using Pollinations.ai - Free API with CORS enabled, no authentication needed
+        const encodedPrompt = encodeURIComponent(prompt);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
         
-        const data = await response.json();
-        
-        if (data.success) {
-            const img = document.createElement('img');
-            img.src = data.image;
-            img.style.maxWidth = '100%';
-            img.style.maxHeight = '100%';
-            img.style.borderRadius = '8px';
+        // Verify image loads before displaying
+        const img = document.createElement('img');
+        img.onload = () => {
             screen.innerHTML = '';
             screen.appendChild(img);
-        } else {
-            screen.innerHTML = `<p>Error: ${data.error}</p>`;
-        }
+        };
+        img.onerror = () => {
+            screen.innerHTML = '<p>Error loading image. Please try again.</p>';
+        };
+        img.src = imageUrl;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.borderRadius = '8px';
+        
     } catch (error) {
-        screen.innerHTML = `<p>Connection error. Make sure the Python server is running.</p>`;
+        screen.innerHTML = `<p>Error generating image: ${error.message}</p>`;
         console.error('Error:', error);
     } finally {
         generateBtn.disabled = false;
